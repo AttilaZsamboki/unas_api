@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unas_api"
-version = "0.0.3"
+version = "0.1.0"
 authors = [
   { name="Attila Zsámboki", email="zsamboki.attila.jr@gmail.com" },
 ]
