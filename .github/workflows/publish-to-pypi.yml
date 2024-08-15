@@ -35,7 +35,7 @@ jobs:
             - build
         runs-on: ubuntu-latest
         environment:
-            name: vars
+            name: pypi
             url: https://pypi.org/p/unas_api # Replace <package-name> with your PyPI project name
         permissions:
             id-token: write # IMPORTANT: mandatory for trusted publishing
