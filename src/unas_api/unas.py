@@ -30,10 +30,10 @@ class Category:
             self.id = id
             self.tree = tree
 
+    @dataclass
     class Products:
-        def __init__(self, all: int, new: int):
-            self.all = all
-            self.new = new
+        all: int
+        new: int
 
     class Texts:
         def __init__(self, top: str, bottom: str, menu: str):
@@ -273,8 +273,8 @@ class Product:
     @dataclass
     class Category:
         type: CategoryType
-        id: int
-        name: str
+        id: Optional[int]
+        name: Optional[str]
 
     class Image:
         def __init__(
@@ -383,8 +383,7 @@ class UnasAPIBase:
     def get_unas_feed_url(self, lang="hu"):
         url_payload = f'<?xml version="1.0" encoding="UTF-8" ?><Params><Format>xlsx</Format><Lang>{lang}</Lang></Params>'
         url_request = self.make_request("getProductDB", url_payload)
-        url_tree = ElementTree.fromstring(url_request.content)
-        url = url_tree[0].text
+        url = url_request[0].text
         return url
 
     def get_category(self, category_id: int) -> Category:
