@@ -201,6 +201,29 @@ class ContentType(Enum):
     FULL = "full"
 
 
+class ParamType(Enum):
+    TEXT = "text"
+    TEXTMORE = "textmore"
+    ENUM = "enum"
+    ENUMMORE = "enummore"
+    NUM = "num"
+    INTERVAL = "interval"
+    COLOR = "color"
+    LINK = "link"  # Valós URL lehet a paraméter értéke (pl.: https://unas.hu)
+    LINKBLANK = "linkblank"  # Link, új ablakban megnyitva. Valós URL lehet a paraméter értéke (pl.: https://unas.hu)
+    LINK_TEXT = "link_text"  # Szöveges link. Valós URL és egy hozzátartozó szöveg lehet a paraméter értéke (pl.: https://unas.hu - Unas kezdőoldal)
+    HTML = "html"  # Értéke HTML tartalom
+    ICON = "icon"  # Az áruházba előre feltöltött ikon sorszámát veheti fel (pl.: 3)
+    ICONMORE = "iconmore"  # Ikon, többértékű. Több előre feltöltött ikon sorszámát veheti fel értékként, vesszővel elválasztva (pl.: 1,2,3)
+    PIC = "pic"  # Kép (pl.: https://unas.hu/image.jpg)
+    PICLINK = "piclink"  # Kép fájlkezelőből
+    PICLINKTEXT = "piclinktext"  # Kép fájlkezelőből alternatív szöveggel
+    DATE = "date"  # Dátum, az áruházban kezelhető nap típusok értékével megadva (pl.: 10|day). A pipe karakter utáni lehetséges értékek: day, day_except_weekend, day_except_holidays, day_except_weekend_and_holidays
+    CUST_INPUT_TEXT = "cust_input_text"  # Vásárló által megadható szövegbeviteli mező a termék részletek oldalon
+    CUST_INPUT_SELECT = "cust_input_select"  # Vásárló által kiválasztható Legördülő menü a termék részletek oldalon
+    CUST_INPUT_FILE = "cust_input_file"  # Vásárló által megadható fájlfeltöltő mező a termék részletek oldalon
+
+
 class Product:
     class HistoryEvent:
         def __init__(
@@ -289,6 +312,16 @@ class Product:
             self.alt = alt
             self.sef_url = sef_url
 
+    @dataclass
+    class Param:
+        id: int
+        type: ParamType
+        name: str
+        group: str
+        value: str
+        before: Optional[str]
+        after: Optional[str]
+
     def __init__(
         self,
         action: "Action",
@@ -311,6 +344,7 @@ class Product:
         qty_discount: Optional["Product.QtyDiscount"] = None,
         categories: Optional[List["Product.Category"]] = None,
         images: Optional[List["Product.Image"]] = None,
+        params: Optional[List["Product.Param"]] = None,
     ):
         self.action = action
         self.state = state
@@ -332,6 +366,7 @@ class Product:
         self.qty_discount = qty_discount
         self.categories = categories
         self.images = images
+        self.params = params
 
     def __repr__(self):
         return f"<Product(action={self.action}, state={self.state}, id={self.id}, sku={self.sku}, name={self.name}, unit={self.unit}, minimum_qty={self.minimum_qty}, maximum_qty={self.maximum_qty}, alert_qty={self.alert_qty}, unit_step={self.unit_step}, alter_unit_qty={self.alter_unit_qty}, alter_unit_unit={self.alter_unit_unit}, weight={self.weight}, point={self.point}, buyable_with_point={self.buyable_with_point}, description={self.description}, prices={self.prices}, qty_discount={self.qty_discount}, categories={self.categories}, images={self.images})>"
@@ -702,6 +737,17 @@ class UnasAPIBase:
                 )
                 for image in product_tree.findall("Images/Image")
             ],
+            params=[
+                Product.Param(
+                    id=int(param.findtext("Id")),
+                    type=param.findtext("Type"),
+                    name=param.findtext("Name"),
+                    group=param.findtext("Group"),
+                    value=param.findtext("Value"),
+                    before=param.findtext("Before"),
+                    after=param.findtext("After"),
+                ) for param in product_tree.findall("Params/Param")
+            ]
         )
 
         return product
@@ -759,6 +805,10 @@ class UnasAPIBase:
                     {''.join(f'<Image><Type>{image.type}</Type><Filename>{image.filename}</Filename><Alt>{image.alt}</Alt><SefUrl>{image.sef_url}</SefUrl></Image>' for image in product.images)}
                 </Images>
                 """ if product.images is not None else ""}
+                {f"""
+                <Params>
+                    {''.join(f'<Param><Id>{param.id}</Id><Type>{param.type}</Type><Name>{param.name}</Name><Group>{param.group}</Group><Value>{param.value}</Value></Param>' for param in product.params)}
+                 """ if product.params is not None else ""}
             </Product>
         </Products>
         '''
