@@ -268,7 +268,9 @@ class Product:
             self.end = end
 
     class Prices:
-        def __init__(self, appearance: str, vat: str, price: "Product.Price"):
+        def __init__(
+            self, appearance: str, vat: Optional[str], price: Optional["Product.Price"]
+        ):
             self.appearance = appearance
             self.vat = vat
             self.price = price
@@ -746,8 +748,9 @@ class UnasAPIBase:
                     value=param.findtext("Value"),
                     before=param.findtext("Before"),
                     after=param.findtext("After"),
-                ) for param in product_tree.findall("Params/Param")
-            ]
+                )
+                for param in product_tree.findall("Params/Param")
+            ],
         )
 
         return product
@@ -757,7 +760,7 @@ class UnasAPIBase:
             <Product>
                 <Action>{product.action}</Action>
                 {f"<Id>{product.id}</Id>" if product.id is not None else ""}
-                <Sku>{product.sku}</Sku>
+                {f"<Sku>{product.sku}</Sku>" if product.sku is not None else ""}
                 {f"<Name>{product.name}</Name>" if product.name is not None else ""}
                 {f"<Unit>{product.unit}</Unit>" if product.unit is not None else ""}
                 {f"<MinimumQty>{product.minimum_qty}</MinimumQty>" if product.minimum_qty is not None else ""}
@@ -776,8 +779,8 @@ class UnasAPIBase:
                 </Description>
                 """ if product.description is not None else ""}{f"""
                 <Prices>
-                    {f'<Appearance>{product.prices.appearance}</Appearance>' if product.prices.appearance is not None else ''}
-                    <Vat>{product.prices.vat}</Vat>
+                    {f'<Appearance>{product.prices.appearance}</Appearance>' if product.prices.appearance is not None else ""}
+                    {f'<Vat>{product.prices.vat}</Vat>' if product.prices.vat is not None else ""}
                     <Price>
                         <Type>{product.prices.price.type}</Type>
                         <Net>{product.prices.price.net}</Net>
@@ -807,11 +810,13 @@ class UnasAPIBase:
                 """ if product.images is not None else ""}
                 {f"""
                 <Params>
-                    {''.join(f'<Param><Id>{param.id}</Id><Type>{param.type}</Type><Name>{param.name}</Name><Group>{param.group}</Group><Value>{param.value}</Value></Param>' for param in product.params)}
-                 """ if product.params is not None else ""}
+                    {''.join(f'<Param><Id>{param.id}</Id><Type>{param.type}</Type><Name><![CDATA[{param.name}]]></Name><Group>{param.group}</Group><Value><![CDATA[{param.value}]]></Value></Param>' for param in product.params)}
+                </Params>
+                 """ if product.params is not None else "" }
             </Product>
         </Products>
         '''
 
+        print(payload)
         response = self.make_request("setProduct", payload, method="POST")
         return response
