@@ -1,9 +1,9 @@
 # unas_api
 
-A Python library for interacting with the UNAS API.
+A Python library for interacting with the MiniCRM API.
 
 ## Installation
 
 ```bash
-pip install unas_api
+pip install minicrm_api
 ```
